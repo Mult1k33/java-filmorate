@@ -78,7 +78,7 @@ public class FilmController {
             throw new ValidationException("Недопустимая дата релиза");
         }
 
-        if (film.getDescription()!= null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
+        if (film.getDescription() != null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
             log.error("Попытка добавить фильм с недопустимой длиной описания");
             throw new ValidationException("Недопустимая длина описания");
         }
