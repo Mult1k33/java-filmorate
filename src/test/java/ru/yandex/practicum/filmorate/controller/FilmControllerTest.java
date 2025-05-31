@@ -68,7 +68,7 @@ class FilmControllerTest {
         film.setReleaseDate(null);
         film.setDuration(15);
 
-        assertThrows(NullPointerException.class, ()-> filmController.create(film),
+        assertThrows(NullPointerException.class, () -> filmController.create(film),
                 "Дата релиза не может быть null");
     }
 
