@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
+import static ru.yandex.practicum.filmorate.utils.FilmValidate.validateFilm;
 
 @Slf4j
 @RestController
@@ -19,8 +19,6 @@ import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
 public class FilmController {
 
     private final Map<Long, Film> films = new HashMap<>();
-    public static final LocalDate DATE_FIRST_FILM = LocalDate.of(1895, 12, 28);
-    public static final int MAX_DESCRIPTION_LENGTH = 200;
 
     @GetMapping
     public Collection<Film> findAll() {
@@ -63,29 +61,5 @@ public class FilmController {
         films.put(film.getId(), film);
         log.info("Фильм {} c id:{} успешно обновлен", film.getName(), film.getId());
         return film;
-    }
-
-    // Вспомогательный метод проверки выполнения необходимых условий
-    private void validateFilm(Film film) {
-
-        if (film.getName() == null || film.getName().isEmpty()) {
-            log.error("Попытка добавить фильм без названия");
-            throw new ValidationException("Название фильма не может быть пустым");
-        }
-
-        if (film.getReleaseDate().isBefore(DATE_FIRST_FILM)) {
-            log.error("Попытка добавить фильм с недопустимой датой релиза");
-            throw new ValidationException("Недопустимая дата релиза");
-        }
-
-        if (film.getDescription() != null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            log.error("Попытка добавить фильм с недопустимой длиной описания");
-            throw new ValidationException("Недопустимая длина описания");
-        }
-
-        if (film.getDuration() <= 0) {
-            log.error("Попытка добавить фильм с некорректной продолжительностью");
-            throw new ValidationException("Недопустимая продолжительность фильма");
-        }
     }
 }

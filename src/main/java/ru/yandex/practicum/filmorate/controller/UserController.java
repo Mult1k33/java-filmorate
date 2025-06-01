@@ -3,15 +3,13 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.DuplicateException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.*;
 
 import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
+import static ru.yandex.practicum.filmorate.utils.UserValidate.validateUser;
 
 @Slf4j
 @RestController
@@ -76,30 +74,6 @@ public class UserController {
         users.put(user.getId(), user);
         log.info("Пользователь {} c id:{} успешно обновлен", user.getName(), user.getId());
         return user;
-    }
-
-    // Вспомогательный метод проверки выполнения необходимых условий
-    private void validateUser(User user) {
-
-        if (user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
-            log.error("Попытка ввести некорректный логин");
-            throw new ValidationException("Логин не должен быть пустым или содержать пробелов");
-        }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Дата рождения в будущем:{}", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
-
-        if (user.getEmail().isEmpty()) {
-            log.error("Попытка добавить пустой email");
-            throw new ValidationException("email не может быть пустым");
-        }
-
-        if (!user.getEmail().contains("@")) {
-            log.error("Попытка добавить некорректный email");
-            throw new ValidationException("email не содержит @");
-        }
     }
 
     // Вспомогательный метод для проверки на наличие дубликата email
