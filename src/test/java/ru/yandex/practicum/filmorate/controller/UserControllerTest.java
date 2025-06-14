@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.utils.UserValidate;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -452,5 +451,4 @@ class UserControllerTest {
         assertTrue(commonFriends.stream().anyMatch(f -> f.getId().equals(commonFriend.getId())),
                 "Общий друг должен быть в списке");
     }
-
 }
