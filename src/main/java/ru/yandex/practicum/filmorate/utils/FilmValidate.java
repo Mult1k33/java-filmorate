@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.utils;
 
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
  */
 
 @Slf4j
+@Component
 public class FilmValidate {
     public static final LocalDate DATE_FIRST_FILM = LocalDate.of(1895, 12, 28);
     public static final int MAX_DESCRIPTION_LENGTH = 200;
