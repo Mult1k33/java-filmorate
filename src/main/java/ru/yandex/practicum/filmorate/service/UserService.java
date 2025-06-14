@@ -129,7 +129,7 @@ public class UserService {
         }
 
         return user.getFriends().stream()
-                .map(userStorage :: getById)
+                .map(userStorage::getById)
                 .collect(Collectors.toList());
     }
 
