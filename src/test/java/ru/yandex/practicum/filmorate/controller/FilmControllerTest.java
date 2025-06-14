@@ -4,18 +4,33 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.utils.FilmValidate;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
 
     private FilmController filmController;
+    private InMemoryFilmStorage filmStorage;
+    private InMemoryUserStorage userStorage;
+    private FilmValidate filmValidate;
+
 
     @BeforeEach
     public void beforeEach() {
-        filmController = new FilmController();
+        filmStorage = new InMemoryFilmStorage();
+        userStorage = new InMemoryUserStorage();
+        filmValidate = new FilmValidate();
+        filmController = new FilmController(
+                new FilmService(filmStorage, userStorage, filmValidate)
+        );
     }
 
     // Тест успешного создания фильма с валидными данными
@@ -229,5 +244,171 @@ class FilmControllerTest {
         assertThrows(NullPointerException.class,
                 () -> filmController.create(null),
                 "Ожидалось NullPointerException, если объект Film = null");
+    }
+
+    // Тест успешного удаления фильма по Id
+    @Test
+    public void delete_existingFilm_removesFilm() {
+        Film film = new Film();
+        film.setName("Фильм для удаления");
+        film.setDescription("Описание");
+        film.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film.setDuration(100);
+        filmController.create(film);
+
+        filmController.delete(film.getId());
+
+        assertEquals(0, filmController.findAll().size(), "Фильм должен быть удален");
+    }
+
+    // Тест удаления несуществующего фильма
+    @Test
+    public void delete_nonExistentFilm_throwsNotFoundException() {
+        assertThrows(NotFoundException.class, () -> filmController.delete(999L),
+                "Ожидалось NotFoundException при удалении несуществующего фильма");
+    }
+
+    // Тест получения фильма по Id
+    @Test
+    public void getById_existingFilm_returnsFilm() {
+        Film film = new Film();
+        film.setName("Фильм для поиска");
+        film.setDescription("Описание");
+        film.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film.setDuration(100);
+        filmController.create(film);
+
+        Film foundFilm = filmController.getById(film.getId());
+
+        assertEquals(film, foundFilm, "Найденный фильм должен соответствовать созданному");
+    }
+
+    // Тест получения несуществующего фильма по Id
+    @Test
+    public void getById_nonExistentFilm_throwsNotFoundException() {
+        assertThrows(NotFoundException.class, () -> filmController.getById(999L),
+                "Ожидалось NotFoundException при поиске несуществующего фильма");
+    }
+
+    // Тест добавления лайка фильму
+    @Test
+    public void addLike_validUserAndFilm_addsLike() {
+        Film film = new Film();
+        film.setName("Фильм для лайка");
+        film.setDescription("Описание");
+        film.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film.setDuration(100);
+        filmController.create(film);
+
+        User user = new User();
+        user.setEmail("user@mail.ru");
+        user.setLogin("user_login");
+        user.setBirthday(LocalDate.of(1995, 2, 13));
+        userStorage.create(user);
+
+        filmController.addLike(film.getId(), user.getId());
+
+        Film updatedFilm = filmController.getById(film.getId());
+        assertTrue(updatedFilm.getLikesByUsers().contains(user.getId()), "Лайк должен быть добавлен");
+    }
+
+    //Тест добавления лайка несуществующему фильму
+    @Test
+    public void addLike_nonExistentFilm_throwsNotFoundException() {
+        User user = new User();
+        user.setEmail("user@mail.ru");
+        user.setLogin("user_login");
+        user.setBirthday(LocalDate.of(1995, 2, 13));
+        userStorage.create(user);
+
+        assertThrows(NotFoundException.class, () -> filmController.addLike(999L, user.getId()),
+                "Ожидалось NotFoundException при лайке несуществующего фильма");
+    }
+
+    // Тест добавления лайка от несуществующего пользователя
+    @Test
+    public void addLike_nonExistentUser_throwsNotFoundException() {
+        Film film = new Film();
+        film.setName("Фильм для лайка");
+        film.setDescription("Описание");
+        film.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film.setDuration(100);
+        filmController.create(film);
+
+        assertThrows(NotFoundException.class, () -> filmController.addLike(film.getId(), 999L),
+                "Ожидалось NotFoundException при лайке от несуществующего пользователя");
+    }
+
+    // Тест успешного удаления лайка
+    @Test
+    public void removeLike_existingLike_removesLike() {
+        Film film = new Film();
+        film.setName("Фильм для лайка");
+        film.setDescription("Описание");
+        film.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film.setDuration(100);
+        filmController.create(film);
+
+        User user = new User();
+        user.setEmail("user@mail.ru");
+        user.setLogin("user_login");
+        user.setBirthday(LocalDate.of(1995, 2, 13));
+        userStorage.create(user);
+
+        filmController.addLike(film.getId(), user.getId());
+        filmController.removeLike(film.getId(), user.getId());
+
+        Film updatedFilm = filmController.getById(film.getId());
+        assertFalse(updatedFilm.getLikesByUsers().contains(user.getId()), "Лайк должен быть удален");
+    }
+
+    // Тест получения популярных фильмов
+    @Test
+    public void getPopularFilms_returnsFilmsOrderedByLikes() {
+        Film film = new Film();
+        film.setName("Фильм для 2 лайков");
+        film.setDescription("Описание");
+        film.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film.setDuration(100);
+        filmController.create(film);
+
+        Film film2 = new Film();
+        film2.setName("Фильм для 1 лайка");
+        film2.setDescription("Описание");
+        film2.setReleaseDate(LocalDate.of(2025, 6, 14));
+        film2.setDuration(120);
+        filmController.create(film2);
+
+        Film film3 = new Film();
+        film3.setName("Фильм без лайков");
+        film3.setDescription("Описание");
+        film3.setReleaseDate(LocalDate.of(2025, 5, 14));
+        film3.setDuration(70);
+        filmController.create(film3);
+
+        User user = new User();
+        user.setEmail("user@mail.ru");
+        user.setLogin("user_login");
+        user.setBirthday(LocalDate.of(1995, 2, 13));
+        userStorage.create(user);
+
+        User user2 = new User();
+        user2.setEmail("user@yandex.ru");
+        user2.setLogin("user2_login");
+        user2.setBirthday(LocalDate.of(1996, 2, 14));
+        userStorage.create(user2);
+
+        // film получает 2 лайка
+        filmController.addLike(film.getId(), user.getId());
+        filmController.addLike(film.getId(), user2.getId());
+
+        // film2 получает 1 лайк
+        filmController.addLike(film2.getId(), user2.getId());
+
+        Collection<Film> popularFilms = filmController.getPopularFilms(2);
+
+        assertEquals(2, popularFilms.size(), "Должны вернуться 2 фильма");
+        assertEquals(film.getId(), popularFilms.iterator().next().getId(),
+                "Первый фильм должен быть самым популярным");
     }
 }

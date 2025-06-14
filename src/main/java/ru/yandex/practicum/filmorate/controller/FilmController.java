@@ -1,65 +1,72 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
-import static ru.yandex.practicum.filmorate.utils.FilmValidate.validateFilm;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> findAll() {
         log.info("Получен запрос на получение списка всех фильмов");
-        return films.values();
+        return filmService.findAll();
     }
 
     @PostMapping
-    public Film create(@Valid @RequestBody Film newFilm) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Film create(@RequestBody Film newFilm) {
         log.info("Получен запрос на добавление фильма {}", newFilm.getName());
-
-        if (newFilm == null) {
-            log.error("Попытка добавить null");
-            throw new NullPointerException("Фильм не может быть null");
-        }
-
-        validateFilm(newFilm);
-        newFilm.setId(getNextId(films.keySet()));
-        films.put(newFilm.getId(), newFilm);
-
-        log.info("Фильм {} успешно добавлен", newFilm.getName());
-        return newFilm;
+        return filmService.create(newFilm);
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film film) {
-        log.info("Получен запрос на обновление фильма c id {}", film.getId());
+    public Film update(@RequestBody Film film) {
+        log.info("Получен запрос на обновление фильма c Id:{}", film.getId());
+        return filmService.update(film);
+    }
 
-        if (film.getId() == null) {
-            log.error("Попытка обновить фильм с id = null");
-            throw new ValidationException("Id фильма не может быть null");
-        }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") Long filmId) {
+        log.info("Получен запрос на удаление фильма с Id:{}", filmId);
+        filmService.delete(filmId);
+    }
 
-        if (!films.containsKey(film.getId())) {
-            log.error("Попытка обновить фильм, не найденный по id:{}", film.getId());
-            throw new NotFoundException("Фильм с id:" + film.getId() + " не найден");
-        }
+    @GetMapping("/{id}")
+    public Film getById(@PathVariable("id") Long filmId) {
+        log.info("Получен запрос на получение фильма с Id:{}", filmId);
+        return filmService.getById(filmId);
+    }
 
-        validateFilm(film);
-        films.put(film.getId(), film);
-        log.info("Фильм {} c id:{} успешно обновлен", film.getName(), film.getId());
-        return film;
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addLike(@PathVariable("id") Long filmId, @PathVariable("userId") Long userId) {
+        log.info("Получен запрос на добавление лайка фильму с Id:{} от пользователя с Id:{}", filmId, userId);
+        filmService.addLike(filmId, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeLike(@PathVariable("id") Long filmId, @PathVariable("userId") Long userId) {
+        log.info("Получен запрос на удаление лайка у фильма с Id:{} от пользователя с Id:{}", filmId, userId);
+        filmService.removeLike(filmId, userId);
+    }
+
+    @GetMapping("/popular")
+    public Collection<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count) {
+        log.info("Получен запрос на получение топ-{} фильмов по количеству лайков", count);
+        return filmService.getPopularFilms(count);
     }
 }
