@@ -31,13 +31,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     // Удаление фильма по id
     @Override
     public void delete(Long id) {
-        if (id == null || id <= 0) {
-            throw new ValidationException("Идентификатор фильма должен быть определён и положительным");
-        }
-
-        if (!films.containsKey(id)) {
-            throw new NotFoundException("Фильм с id = " + id + " не найден");
-        }
+        validateFilmId(id);
 
         filmNames.remove(films.get(id).getName().toLowerCase());
         films.remove(id);
@@ -46,13 +40,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     // Изменение фильма
     @Override
     public Film update(Film film) {
-        if (film.getId() == null || film.getId() <= 0) {
-            throw new ValidationException("Идентификатор фильма должен быть определён и положительным");
-        }
-
-        if (!films.containsKey(film.getId())) {
-            throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
-        }
+        validateFilmId(film.getId());
 
         final Film oldFilm = films.get(film.getId());
 
@@ -72,14 +60,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     // Получение фильма по id
     @Override
     public Film getById(Long id) {
-        if (id == null || id <= 0) {
-            throw new ValidationException("Идентификатор фильма должен быть определён и положительным");
-        }
-
-        if (!films.containsKey(id)) {
-            throw new NotFoundException("Фильм с id = " + id + " не найден");
-        }
-
+        validateFilmId(id);
         return films.get(id);
     }
 
@@ -94,6 +75,17 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (filmNames.contains(name.toLowerCase())) {
             log.warn("Фильм '{}' уже существует", name);
             throw new DuplicateException("Фильм с таким названием уже существует");
+        }
+    }
+
+    // Вспомогательный метод для валидации фильма
+    private void validateFilmId(Long id) {
+        if (id == null || id <= 0) {
+            throw new ValidationException("Идентификатор фильма должен быть определён и положительным");
+        }
+
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("Фильм с id = " + id + " не найден");
         }
     }
 }

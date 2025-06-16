@@ -37,13 +37,7 @@ public class InMemoryUserStorage implements UserStorage {
     // Удаление пользователя по id
     @Override
     public void delete(Long id) {
-        if (id == null || id <= 0) {
-            throw new ValidationException("Идентификатор пользователя должен быть определён и положительным");
-        }
-
-        if (!users.containsKey(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
+        validateUserId(id);
 
         usersEmail.remove(users.get(id).getEmail().toLowerCase());
         users.remove(id);
@@ -52,13 +46,7 @@ public class InMemoryUserStorage implements UserStorage {
     // Изменение пользователя
     @Override
     public User update(User user) {
-        if (user.getId() == null || user.getId() <= 0) {
-            throw new ValidationException("Идентификатор пользователя должен быть определён и положительным");
-        }
-
-        if (!users.containsKey(user.getId())) {
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
+        validateUserId(user.getId());
 
         final User oldUser = users.get(user.getId());
 
@@ -75,14 +63,7 @@ public class InMemoryUserStorage implements UserStorage {
     // Получение пользователя по id
     @Override
     public User getById(Long id) {
-        if (id == null || id <= 0) {
-            throw new ValidationException("Идентификатор пользователя должен быть определён и положительным");
-        }
-
-        if (!users.containsKey(id)) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-
+        validateUserId(id);
         return users.get(id);
     }
 
@@ -97,6 +78,17 @@ public class InMemoryUserStorage implements UserStorage {
         if (usersEmail.contains(email.toLowerCase())) {
             log.warn("Email '{}' уже занят", email);
             throw new DuplicateException("Email уже используется");
+        }
+    }
+
+    // Вспомогательный метод для валидации пользователя
+    private void validateUserId(Long id) {
+        if (id == null || id <= 0) {
+            throw new ValidationException("Идентификатор пользователя должен быть определён и положительным");
+        }
+
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }
     }
 }
