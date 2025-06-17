@@ -1,86 +1,77 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.*;
-
-import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
-import static ru.yandex.practicum.filmorate.utils.UserValidate.validateUser;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    private final Map<Long, User> users = new HashMap<>();
-    private final Set<String> userEmails = new HashSet<>();
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
         log.info("Получен запрос на получение всех пользователей");
-        return users.values();
+        return userService.findAll();
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User newUser) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@RequestBody User newUser) {
         log.info("Получен запрос на добавление нового пользователя {}", newUser.getLogin());
-
-        if (newUser == null) {
-            log.error("Попытка добавить null");
-            throw new NullPointerException("Пользователь не может быть null");
-        }
-
-        checkEmailUniqueness(newUser.getEmail());
-
-        validateUser(newUser);
-        userEmails.add(newUser.getEmail().toLowerCase());
-        newUser.setId(getNextId(users.keySet()));
-
-        if (newUser.getName() == null || newUser.getName().isBlank()) {
-            newUser.setName(newUser.getLogin());
-        }
-
-        users.put(newUser.getId(), newUser);
-        log.info("Пользователь {} успешно добавлен", newUser.getName());
-        return newUser;
+        return userService.create(newUser);
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User user) {
+    public User update(@RequestBody User user) {
         log.info("Получен запрос на обновление пользователя с id:{}", user.getId());
-
-        if (!users.containsKey(user.getId())) {
-            log.error("Пользователь с id:{} не найден", user.getId());
-            throw new NotFoundException("Пользователь с заданным id не существует");
-        }
-
-        validateUser(user);
-
-        // Случай, когда при обновлении меняется email и нужно удалить старый из коллекции email-ов
-        final User oldUser = users.get(user.getId());
-        if (!oldUser.getEmail().equalsIgnoreCase(user.getEmail())) {
-            userEmails.remove(oldUser.getName().toLowerCase());
-            userEmails.add(user.getEmail().toLowerCase());
-        }
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        users.put(user.getId(), user);
-        log.info("Пользователь {} c id:{} успешно обновлен", user.getName(), user.getId());
-        return user;
+        return userService.update(user);
     }
 
-    // Вспомогательный метод для проверки на наличие дубликата email
-    private void checkEmailUniqueness(String email) {
-        if (userEmails.contains(email.toLowerCase())) {
-            log.warn("Пользователь с email:{} уже был добавлен", email);
-            throw new DuplicateException("Email уже используется");
-        }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") Long userId) {
+        log.info("Получен запрос на удаление пользователя с Id:{}", userId);
+        userService.delete(userId);
+    }
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable("id") Long userId) {
+        log.info("Получен запрос на получение пользователя с Id:{}", userId);
+        return userService.getById(userId);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addFriend(@PathVariable("id") Long userId, @PathVariable("friendId") Long friendId) {
+        log.info("Получен запрос на добавление в друзья к пользователю с Id:{} пользователя:{}", userId, friendId);
+        userService.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeFriend(@PathVariable("id") Long userId, @PathVariable("friendId") Long friendId) {
+        log.info("Получен запрос на удаление из друзей пользователя с Id:{} пользователя:{}", userId, friendId);
+        userService.removeFriend(userId, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriends(@PathVariable("id") Long userId) {
+        log.info("Получен запрос на получение списка всех друзей пользователя с Id:{}", userId);
+        return userService.getFriends(userId);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable("id") Long userId, @PathVariable("otherId") Long otherId) {
+        log.info("Получен запрос на получение списка общих друзей у пользователей с Id:{} и {}", userId, otherId);
+        return userService.getCommonFriends(userId, otherId);
     }
 }
