@@ -50,7 +50,9 @@ SELECT f.film_id,
 FROM films AS f
 LEFT JOIN likes l ON f.film_id = l.film_id
 GROUP BY f.film_id,
-         f.name
+         f.name,
+         f.description,
+         f.release_date
 HAVING COUNT(l.user_id) >= 2
 ORDER BY likes_count DESC;
 ```
