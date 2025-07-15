@@ -95,6 +95,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
                             .collect(Collectors.toSet())
             );
         });
+
         return users;
     }
 }
