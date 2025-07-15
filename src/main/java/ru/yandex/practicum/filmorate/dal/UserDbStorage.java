@@ -83,7 +83,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public Collection<User> findAll() {
         Collection<User> users = findMany(FIND_ALL_USERS_QUERY);
 
-        if(users.isEmpty()) {
+        if (users.isEmpty()) {
             return users;
         }
 
