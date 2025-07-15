@@ -39,5 +39,10 @@ public class FilmValidate {
             log.error("Попытка добавить фильм с некорректной продолжительностью");
             throw new ValidationException("Недопустимая продолжительность фильма");
         }
+
+        if (film.getMpa() == null || film.getMpa().getId() == null) {
+            log.error("Попытка добавить фильм без рейтинга");
+            throw new ValidationException("Mpa-рейтинг фильма не может быть пустым");
+        }
     }
 }

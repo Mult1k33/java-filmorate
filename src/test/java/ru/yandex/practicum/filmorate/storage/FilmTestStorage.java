@@ -1,25 +1,31 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
 
+/**
+ * Утилитарный класс - тестовое хранилище для Film
+ */
+
 @Slf4j
-@Component
-public class InMemoryFilmStorage implements FilmStorage {
+@Repository
+@Primary
+public class FilmTestStorage implements FilmStorage {
 
     private final Map<Long, Film> films = new HashMap<>();
     private final Set<String> filmNames = new HashSet<>();
 
-    // Добавление фильма
+    // Создание фильма
     @Override
     public Film create(Film film) {
-
         checkFilmNamesUniqueness(film.getName());
         filmNames.add(film.getName().toLowerCase());
         film.setId(getNextId(films.keySet()));
@@ -32,12 +38,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void delete(Long id) {
         validateFilmId(id);
-
         filmNames.remove(films.get(id).getName().toLowerCase());
         films.remove(id);
     }
 
-    // Изменение фильма
+    // Обновление фильма
     @Override
     public Film update(Film film) {
         validateFilmId(film.getId());
@@ -59,15 +64,25 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     // Получение фильма по id
     @Override
-    public Film getById(Long id) {
+    public Optional<Film> findById(Long id) {
         validateFilmId(id);
-        return films.get(id);
+        return Optional.ofNullable(films.get(id));
     }
 
     // Получение всех фильмов
     @Override
     public Collection<Film> findAll() {
-        return List.copyOf(films.values());
+        return films.values();
+    }
+
+    // Получения списка популярных фильмов
+    @Override
+    public Collection<Film> findPopularFilms(int count) {
+        return films.values().stream()
+                .sorted((f1, f2) -> Integer.compare(f2.getLikesByUsers().size(),
+                        f1.getLikesByUsers().size()))
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     // Вспомогательный метод для проверки на наличие дубликата названия фильма

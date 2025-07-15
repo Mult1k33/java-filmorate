@@ -1,23 +1,21 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.util.Set;
 
-/**
- * User.
- */
 @Data
-@EqualsAndHashCode(of = {"id"})
-public class User {
+public class UserDto {
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
     private String email;
     private String login;
     private String name;
     private LocalDate birthday;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Set<Long> friends;
 
     public String getName() {

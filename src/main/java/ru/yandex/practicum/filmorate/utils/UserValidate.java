@@ -28,6 +28,11 @@ public class UserValidate {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
 
+        if (user.getBirthday() == null) {
+            log.error("Попытка ввести пустую дату рождения");
+            throw new ValidationException("Дата рождения не может быть null");
+        }
+
         if (user.getEmail().isEmpty()) {
             log.error("Попытка добавить пустой email");
             throw new ValidationException("email не может быть пустым");
