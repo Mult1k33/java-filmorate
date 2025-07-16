@@ -1,7 +1,8 @@
-package ru.yandex.practicum.filmorate.storage.user;
+package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -9,9 +10,14 @@ import java.util.*;
 
 import static ru.yandex.practicum.filmorate.utils.ControllersUtils.getNextId;
 
+/**
+ * Утилитарный класс - тестовое хранилище для User
+ */
+
 @Slf4j
-@Component
-public class InMemoryUserStorage implements UserStorage {
+@Repository
+@Primary
+public class UserTestStorage implements UserStorage {
 
     private final Map<Long, User> users = new HashMap<>();
     private final Set<String> usersEmail = new HashSet<>();
@@ -62,9 +68,9 @@ public class InMemoryUserStorage implements UserStorage {
 
     // Получение пользователя по id
     @Override
-    public User getById(Long id) {
+    public Optional<User> findById(Long id) {
         validateUserId(id);
-        return users.get(id);
+        return Optional.ofNullable(users.get(id));
     }
 
     // Получение всех пользователей

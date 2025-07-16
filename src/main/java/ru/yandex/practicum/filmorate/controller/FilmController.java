@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
@@ -18,22 +20,22 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> findAll() {
+    public Collection<FilmDto> findAll() {
         log.info("Получен запрос на получение списка всех фильмов");
         return filmService.findAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@RequestBody Film newFilm) {
-        log.info("Получен запрос на добавление фильма {}", newFilm.getName());
-        return filmService.create(newFilm);
+    public FilmDto create(@RequestBody NewFilmRequest newFilmRequest) {
+        log.info("Получен запрос на добавление фильма {}", newFilmRequest.getName());
+        return filmService.create(newFilmRequest);
     }
 
     @PutMapping
-    public Film update(@RequestBody Film film) {
-        log.info("Получен запрос на обновление фильма c Id:{}", film.getId());
-        return filmService.update(film);
+    public FilmDto update(@RequestBody UpdateFilmRequest filmRequest) {
+        log.info("Получен запрос на обновление фильма c Id:{}", filmRequest.getId());
+        return filmService.update(filmRequest);
     }
 
     @DeleteMapping("/{id}")
@@ -44,9 +46,9 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film getById(@PathVariable("id") Long filmId) {
+    public FilmDto getById(@PathVariable("id") Long filmId) {
         log.info("Получен запрос на получение фильма с Id:{}", filmId);
-        return filmService.getById(filmId);
+        return filmService.findById(filmId);
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -64,9 +66,9 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(
+    public Collection<FilmDto> getPopularFilms(
             @RequestParam(defaultValue = "10") int count) {
         log.info("Получен запрос на получение топ-{} фильмов по количеству лайков", count);
-        return filmService.getPopularFilms(count);
+        return filmService.findPopularFilms(count);
     }
 }

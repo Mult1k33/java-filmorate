@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.*;
@@ -18,22 +20,22 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public Collection<User> findAll() {
+    public Collection<UserDto> findAll() {
         log.info("Получен запрос на получение всех пользователей");
         return userService.findAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestBody User newUser) {
-        log.info("Получен запрос на добавление нового пользователя {}", newUser.getLogin());
-        return userService.create(newUser);
+    public UserDto create(@RequestBody NewUserRequest newUserRequest) {
+        log.info("Получен запрос на добавление нового пользователя {}", newUserRequest.getLogin());
+        return userService.create(newUserRequest);
     }
 
     @PutMapping
-    public User update(@RequestBody User user) {
-        log.info("Получен запрос на обновление пользователя с id:{}", user.getId());
-        return userService.update(user);
+    public UserDto update(@RequestBody UpdateUserRequest userRequest) {
+        log.info("Получен запрос на обновление пользователя с id:{}", userRequest.getId());
+        return userService.update(userRequest);
     }
 
     @DeleteMapping("/{id}")
@@ -44,7 +46,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable("id") Long userId) {
+    public UserDto getById(@PathVariable("id") Long userId) {
         log.info("Получен запрос на получение пользователя с Id:{}", userId);
         return userService.getById(userId);
     }
@@ -64,14 +66,14 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends")
-    public Collection<User> getFriends(@PathVariable("id") Long userId) {
+    public Collection<UserDto> getFriends(@PathVariable("id") Long userId) {
         log.info("Получен запрос на получение списка всех друзей пользователя с Id:{}", userId);
-        return userService.getFriends(userId);
+        return userService.findAllFriends(userId);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getCommonFriends(@PathVariable("id") Long userId, @PathVariable("otherId") Long otherId) {
+    public Collection<UserDto> getCommonFriends(@PathVariable("id") Long userId, @PathVariable("otherId") Long otherId) {
         log.info("Получен запрос на получение списка общих друзей у пользователей с Id:{} и {}", userId, otherId);
-        return userService.getCommonFriends(userId, otherId);
+        return userService.findCommonFriends(userId, otherId);
     }
 }

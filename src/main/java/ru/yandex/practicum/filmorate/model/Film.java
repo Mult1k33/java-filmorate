@@ -14,13 +14,11 @@ import java.util.Set;
 public class Film {
 
     private Long id;
-    private Set<Long> likesByUsers;
-
     private String name;
-
     private String description;
-
     private LocalDate releaseDate;
-
     private Integer duration;
+    private Mpa mpa;
+    private Set<Long> likesByUsers;
+    private Set<Genre> genres;
 }
